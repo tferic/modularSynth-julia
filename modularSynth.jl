@@ -3,7 +3,8 @@ using TOML
 using SampledSignals
 
 struct AudioConfig
-  device_index::Int
+  device_index_input::Int
+  device_index_output::Int
   sample_rate::Int
   channels::Int
 end
@@ -22,7 +23,7 @@ square_wave(freq, t) = sign.(sin.(2 * pi * freq .* t))
 # === Load Configuration ===
 function load_config(path::String)::AudioConfig
   cfg = TOML.parsefile(path)
-  return AudioConfig(cfg["device_index"], cfg["sample_rate"], cfg["channels"])
+  return AudioConfig(cfg["device_index_input"], cfg["device_index_output"], cfg["sample_rate"], cfg["channels"])
 end
 
 # === Generate the waveform ===
@@ -36,7 +37,8 @@ end
 function play_note(cfg::AudioConfig, note::Note)
   PortAudio.initialize()
 
-  dev = PortAudio.devices()[cfg.device_index]
+  dev_input = PortAudio.devices()[cfg.device_index_input]
+  dev_output = PortAudio.devices()[cfg.device_index_output]
   sig = generate_wave(note, cfg.sample_rate)
 
   # Mono or Stereo
@@ -48,7 +50,7 @@ function play_note(cfg::AudioConfig, note::Note)
     error("Only 1 or 2 channels supported")
   end
 
-  stream = PortAudioStream(dev, dev, 0, cfg.channels; samplerate=cfg.sample_rate, eltype=Float32)
+  stream = PortAudioStream(dev_input, dev_output, 0, cfg.channels; samplerate=cfg.sample_rate, eltype=Float32)
 
   write(stream, sig)
   close(stream)
