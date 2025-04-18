@@ -14,3 +14,5 @@ PortAudio.devices()
 ```
 
 Notice, that the module requires us to specify both the input and the output device, even if we only really need the output device.  
+
+See module documentation [here](https://github.com/JuliaAudio/PortAudio.jl)
