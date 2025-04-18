@@ -19,6 +19,9 @@ end
 # === Waveform generators ===
 sine_wave(freq, t) = sin.(2 * pi * freq .* t)
 square_wave(freq, t) = sign.(sin.(2 * pi * freq .* t))
+function harmonic_wave(freq, t)
+  return sin.(2 * pi * freq .* t) + (1/3) * sin.(2 * pi * 3 * freq .* t) + (1/5) * sin.(2 * pi * 5 * freq .* t) + (1/7) * sin.(2 * pi * 7 * freq .* t)
+end
 
 # === Load Configuration ===
 function load_config(path::String)::AudioConfig
@@ -59,7 +62,7 @@ end
 
 function main()
   cfg = load_config("audio_config.toml")
-  note = Note(440.0, 2.0, 0.5, sine_wave)
+  note = Note(440.0, 2.0, 0.5, harmonic_wave)
   play_note(cfg, note)
 end
 
