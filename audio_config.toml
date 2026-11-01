@@ -1,5 +1,6 @@
-device_index_input = 7
-device_index_output = 7
+device_name = "pulse"
 sample_rate = 48000
 channels = 1
+device_index_input = 11
+device_index_output = 11
 

@@ -3,8 +3,7 @@ using TOML
 using SampledSignals
 
 struct AudioConfig
-  device_index_input::Int
-  device_index_output::Int
+  device_name::String
   sample_rate::Int
   channels::Int
 end
@@ -53,40 +52,39 @@ function harmonic_generator(settings::HarmonicSettings)
 end
 
 # === Load Configuration ===
-function load_config(path::String)::AudioConfig
-  cfg = TOML.parsefile(path)
-  return AudioConfig(cfg["device_index_input"], cfg["device_index_output"], cfg["sample_rate"], cfg["channels"])
+function load_config(path)
+  let cfg = TOML.parsefile(path)
+    AudioConfig(cfg["device_name"], cfg["sample_rate"], cfg["channels"])
+  end
 end
 
 # === Generate the waveform ===
 function generate_wave(note::Note, sample_rate::Int)
-  num_samples = Int(round(note.duration * sample_rate))
-  t = range(0, note.duration, length=num_samples)
+  n = round(Int, note.duration * sample_rate)
+  t = (0:n-1) ./ sample_rate
   return note.amplitude .* note.generator(note.freq, t)
 end
 
 # === Play note ===
 function play_note(cfg::AudioConfig, note::Note)
-  PortAudio.initialize()
-
-  dev_input = PortAudio.devices()[cfg.device_index_input]
-  dev_output = PortAudio.devices()[cfg.device_index_output]
   sig = generate_wave(note, cfg.sample_rate)
 
-  # Mono or Stereo
-  if cfg.channels == 2
-    audio_data = hcat(sig, sig)
-  elseif cfg.channels == 1
-    audio_data = sig
+  audio_data = if cfg.channels == 1
+    Float32.(sig)
+  elseif cfg.channels == 2
+    Float32.(hcat(sig, sig))
   else
     error("Only 1 or 2 channels supported")
   end
 
-  stream = PortAudioStream(dev_input, dev_output, 0, cfg.channels; samplerate=cfg.sample_rate, eltype=Float32)
-
-  write(stream, sig)
-  close(stream)
-  PortAudio.terminate()
+  stream = PortAudioStream(cfg.device_name, 0, cfg.channels;
+                           samplerate=cfg.sample_rate)
+  try
+    write(stream, audio_data)
+    sleep(0.2)          # let the last buffer drain before closing
+  finally
+    close(stream)
+  end
 end
 
 function main()
