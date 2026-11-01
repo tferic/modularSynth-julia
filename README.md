@@ -2,6 +2,8 @@
 
 This is an experimental proof-of-work script to see how audio notes can be played (generated) on Linux.  
 
+P.S. If you just want to make music through computer code, try Strudel.  
+
 ## Configuring Audio
 
 The script will read the audio configuration from a file `audio_config.toml` from the same directory where the script is ran.  
